@@ -106,13 +106,80 @@ public class Model extends Observable {
      *    value, then the leading two tiles in the direction of motion merge,
      *    and the trailing tile does not.
      * */
+    public int checkfornull(int col,int row,Board b){
+        int counter=0;
+        for(int i=row+1;i<b.size();i++){
+            if(b.tile(col,i)==null){
+                counter++;
+            }else{
+                break;
+            }
+        }
+        return counter;
+    }
+    public boolean checkformerge(Tile t1,Tile t2){
+
+        if(t1.value()==t2.value()){
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
+
     public boolean tilt(Side side) {
         boolean changed;
         changed = false;
-
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
+        board.setViewingPerspective(side);
+        int [][]con={
+                {0,0,0,0},
+                {0,0,0,0},
+                {0,0,0,0},
+                {0,0,0,0}
+        } ;
+
+        for(int i=this.board.size()-2;i>=0;i--){
+
+            for(int j=0;j<this.board.size();j++){
+                if(this.board.tile(j,i)==null){
+                    continue;
+                }
+                else{
+                    if(checkfornull(j,i,this.board)+i>=this.board.size()-1){
+                        this.board.move(j,this.board.size()-1,this.board.tile(j,i));
+                        changed=true;
+                    }else {
+                       if(checkformerge(this.board.tile(j, i), this.board.tile(j, i + checkfornull(j, i, this.board) + 1))){
+                           int row1=i + checkfornull(j, i, this.board) + 1;
+                           if(con[row1][j]==0){
+                               this.board.move(j,row1,this.board.tile(j,i));
+                               score+=this.board.tile(j,row1).value();
+                               con[row1][j]=1;
+                               changed=true;
+                           }else{
+                               row1--;
+                               this.board.move(j,row1,this.board.tile(j,i));
+                               changed=true;
+                           }
+                        }
+                       else{
+                           int row1=i + checkfornull(j, i, this.board);
+                           this.board.move(j,row1,this.board.tile(j,i));
+                           changed=true;
+                       }
+
+                    }
+                }
+            }
+
+        }
+        board.setViewingPerspective(Side.NORTH);
+
+
 
         checkGameOver();
         if (changed) {
@@ -138,7 +205,15 @@ public class Model extends Observable {
      * */
     public static boolean emptySpaceExists(Board b) {
         // TODO: Fill in this function.
-        return false;
+        boolean flag=false;
+        for(int i=0;i<b.size();i++){
+            for(int j=0;j<b.size();j++){
+                if(b.tile(i,j)==null){
+                    flag=true;
+                }
+            }
+        }
+        return flag;
     }
 
     /**
@@ -148,7 +223,18 @@ public class Model extends Observable {
      */
     public static boolean maxTileExists(Board b) {
         // TODO: Fill in this function.
-        return false;
+        boolean flag=false;
+        for(int i=0;i<b.size();i++){
+            for(int j=0;j<b.size();j++){
+                if(b.tile(i,j)==null){
+                    continue;
+                }
+                if(b.tile(i,j).value()==MAX_PIECE){
+                    flag=true;
+                }
+            }
+        }
+        return flag;
     }
 
     /**
@@ -159,8 +245,32 @@ public class Model extends Observable {
      */
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
-        return false;
+
+        boolean flagforcheck = false;
+
+        if(emptySpaceExists(b)){
+            return true;
+        }
+            for (int i = 0; i < b.size(); i++) {
+                for (int j = 0; j < b.size() - 1; j++) {
+                    if (b.tile(i, j).value() == b.tile(i, j + 1).value()) {
+                        flagforcheck = true;
+                    }
+                }
+            }
+            for (int i = 0; i < b.size(); i++) {
+                for (int j = 0; j < b.size() - 1; j++) {
+                    if (b.tile(j, i).value() == b.tile(j + 1, i).value()) {
+                        flagforcheck = true;
+                    }
+                }
+            }
+
+            return flagforcheck;
+
     }
+
+
 
 
     @Override
